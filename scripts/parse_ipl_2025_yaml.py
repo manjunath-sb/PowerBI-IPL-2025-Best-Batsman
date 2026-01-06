@@ -1,14 +1,18 @@
+from pathlib import Path
 import yaml
 import pandas as pd
-from pathlib import Path
 
-RAW_DATA_PATH = Path("data_raw/yaml")
-OUTPUT_PATH = Path("data_processed/csv")
+# Resolve project root reliably
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+RAW_DATA_PATH = BASE_DIR / "data_raw" / "yaml"
+OUTPUT_PATH = BASE_DIR / "data_processed" / "csv"
 OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
+
+
 
 matches = []
 balls = []
-
 
 for yaml_file in RAW_DATA_PATH.glob("*.yaml"):
     with open(yaml_file, "r", encoding="utf-8") as file:
@@ -36,12 +40,16 @@ for yaml_file in RAW_DATA_PATH.glob("*.yaml"):
                 for delivery in innings_data["deliveries"]:
                     for ball_number, ball_data in delivery.items():
 
-                        batter = ball_data["batter"]
-                        bowler = ball_data["bowler"]
+                        batsman = ball_data.get("batsman")
+                        bowler = ball_data.get("bowler")
 
-                        runs_batter = ball_data["runs"]["batter"]
-                        runs_extras = ball_data["runs"]["extras"]
-                        runs_total = ball_data["runs"]["total"]
+                        if batsman is None or bowler is None:
+                            continue
+
+                        runs = ball_data.get("runs", {})
+                        runs_batsman = runs.get("batsman", 0)
+                        runs_extras = runs.get("extras", 0)
+                        runs_total = runs.get("total", 0)
 
                         wicket = ball_data.get("wickets", [])
                         is_wicket = 1 if wicket else 0
@@ -51,24 +59,18 @@ for yaml_file in RAW_DATA_PATH.glob("*.yaml"):
                             "innings": innings_name,
                             "ball": ball_number,
                             "batting_team": batting_team,
-                            "batter": batter,
+                            "batsman": batsman,
                             "bowler": bowler,
-                            "runs_batter": runs_batter,
+                            "runs_batsman": runs_batsman,
                             "runs_extras": runs_extras,
                             "runs_total": runs_total,
                             "is_wicket": is_wicket
                         })
 
-
-
 df_matches = pd.DataFrame(matches)
 df_balls = pd.DataFrame(balls)
-
 
 df_matches.to_csv(OUTPUT_PATH / "matches_ipl_2025.csv", index=False)
 df_balls.to_csv(OUTPUT_PATH / "balls_ipl_2025.csv", index=False)
 
-
 print("IPL 2025 data extraction completed successfully.")
-
-

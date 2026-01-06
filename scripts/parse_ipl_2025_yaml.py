@@ -43,16 +43,20 @@ for yaml_file in RAW_DATA_PATH.glob("*.yaml"):
                         batsman = ball_data.get("batsman")
                         bowler = ball_data.get("bowler")
 
-                        if batsman is None or bowler is None:
-                            continue
-
                         runs = ball_data.get("runs", {})
                         runs_batsman = runs.get("batsman", 0)
                         runs_extras = runs.get("extras", 0)
                         runs_total = runs.get("total", 0)
 
-                        wicket = ball_data.get("wickets", [])
-                        is_wicket = 1 if wicket else 0
+                        # Wicket detection (schema-safe)
+                        if "wicket" in ball_data or "wickets" in ball_data:
+                            is_wicket = 1
+                        else:
+                            is_wicket = 0
+
+                        # Skip only completely unusable non-wicket rows
+                        if batsman is None and is_wicket == 0:
+                            continue
 
                         balls.append({
                             "match_id": match_id,

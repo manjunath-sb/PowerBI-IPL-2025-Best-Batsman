@@ -1,3 +1,11 @@
+# Python
 venv/
-data_raw/
 __pycache__/
+
+# Power BI temp
+*.pbit
+*.pbix.tmp
+
+# OS
+.DS_Store
+Thumbs.db
